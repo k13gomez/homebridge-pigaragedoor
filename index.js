@@ -23,6 +23,7 @@ function PiGarageDoorAccessory(log, config) {
 
 PiGarageDoorAccessory.prototype.doorMonitor = function(targetState, count) {
     if (this.service) {
+        //monitor the garage door until the desired is reached or a minute passes
         this.doorStatus(function(err, currentState) {
             if (currentState != targetState) {
                 if (count < 60) {
