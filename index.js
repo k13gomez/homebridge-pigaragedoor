@@ -17,17 +17,17 @@ function PiGarageDoorAccessory(log, config) {
     wpi.digitalWrite(this.togglePinNumber, wpi.HIGH);
     wpi.pinMode(this.togglePinNumber, wpi.OUTPUT);
     wpi.pinMode(this.statusPinNumber, wpi.INPUT);
-    wpi.pullUpDnControl(this.statusPinNumber, wpi.PUP_UP);
+    wpi.pullUpDnControl(this.statusPinNumber, wpi.PUD_UP);
 }
 
 PiGarageDoorAccessory.prototype.doorToggle = function(targetState, callback) {
     this.doorStatus(function(err, currentState) {
         if (currentState != targetState) {
             // toggle the garage door state
-            wpi.digitalWrite(wpi.togglePinNumber, wpi.LOW);
+            wpi.digitalWrite(this.togglePinNumber, wpi.LOW);
             setTimeout(function() {
                 wpi.digitalWrite(this.togglePinNumber, wpi.HIGH);
-                this.log("Set state was successful: " + result);
+                this.log("Set state was successful: " + targetState);
                 callback(null, targetState);
             }.bind(this), 1000);
         }
