@@ -1,36 +1,35 @@
 var Service, Characteristic;
-var request = require("request");
+var wpi = require('wiring-pi');
 
 module.exports = function(homebridge){
-  Service = homebridge.hap.Service;
-  Characteristic = homebridge.hap.Characteristic;
-  homebridge.registerAccessory("homebridge-pigaragedoor", "PiGarageDoor", PiGarageDoorAccessory);
+    Service = homebridge.hap.Service;
+    Characteristic = homebridge.hap.Characteristic;
+    homebridge.registerAccessory("homebridge-pigaragedoor", "PiGarageDoor", PiGarageDoorAccessory);
 }
 
 function PiGarageDoorAccessory(log, config) {
-  this.log = log;
-  this.name = config["name"];
-  this.statusEndpoint = config["status_endpoint"];
-  this.toggleEndpoint = config["toggle_endpoint"];
+    this.log = log;
+    this.name = config["name"];
+    this.statusPinNumber = config["status_pin_number"];
+    this.togglePinNumber = config["toggle_pin_number"];
+
+    wpi.setup('wpi');
+    wpi.digitalWrite(this.togglePinNumber, wpi.HIGH);
+    wpi.pinMode(this.togglePinNumber, wpi.OUTPUT);
+    wpi.pinMode(this.statusPinNumber, wpi.INPUT);
+    wpi.pullUpDnControl(this.statusPinNumber, wpi.PUP_UP);
 }
 
 PiGarageDoorAccessory.prototype.doorToggle = function(targetState, callback) {
     this.doorStatus(function(err, currentState) {
         if (currentState != targetState) {
             // toggle the garage door state
-            request.post({
-                url: this.toggleEndpoint,
-                json: true
-            }, function(err, response, result) {
-                if (!err && response.statusCode == 200) {
-                    this.log("Set state was successful: " + result);
-                    callback(null, targetState);
-                }
-                else {
-                    this.log("Error '"+err+"' setting door state.");
-                    callback(err);
-                }
-            }.bind(this));
+            wpi.digitalWrite(wpi.togglePinNumber, wpi.LOW);
+            setTimeout(function() {
+                wpi.digitalWrite(this.togglePinNumber, wpi.HIGH);
+                this.log("Set state was successful: " + result);
+                callback(null, targetState);
+            }.bind(this), 1000);
         }
         else {
             callback(null, targetState);
@@ -40,19 +39,9 @@ PiGarageDoorAccessory.prototype.doorToggle = function(targetState, callback) {
 
 PiGarageDoorAccessory.prototype.doorStatus = function(callback) {
     // get the state from the garage door
-    request.get({
-        url: this.statusEndpoint,
-        json: true
-    }, function(err, response, result) {
-        if (!err && response.statusCode == 200) {
-            this.log("Get state was successful: " + result);
-            callback(null, result == "closed" ? Characteristic.CurrentDoorState.CLOSED : Characteristic.CurrentDoorState.OPEN);
-        }
-        else {
-            this.log("Error '"+err+"' getting door state.");
-            callback(err);
-        }
-    }.bind(this));
+    var result = wpi.digitalRead(this.statusPinNumber);
+    this.log("Get state was successful: " + result);
+    callback(null, result == 0 ? Characteristic.CurrentDoorState.CLOSED : Characteristic.CurrentDoorState.OPEN);
 }
 
 PiGarageDoorAccessory.prototype.getServices = function() {

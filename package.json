@@ -18,6 +18,6 @@
     "url": "git://github.com/k13gomez/homebridge-pigaragedoor.git"
   },
   "dependencies": {
-    "request": "^2.65.0"
+    "wiring-pi": "^2.2.0"
   }
 }

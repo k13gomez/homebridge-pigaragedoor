@@ -1,15 +1,15 @@
 
-# HttpGarageDoor Plugin
+# PiGarageDoor Plugin
 
 Example config.json:
 
     {
       "accessories": [
         {
-          "accessory": "HttpGarageDoor",
+          "accessory": "PiGarageDoor",
           "name": "Garage Door",
-          "status_endpoint": "http://localhost:3000/api/status",
-          "toggle_endpoint": "http://localhost:3000/api/toggle"
+          "status_pin_number": 24,
+          "toggle_pin_number": 7
         }
       ]
     }
