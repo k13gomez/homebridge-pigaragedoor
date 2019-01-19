@@ -39,6 +39,25 @@ PiGarageDoorAccessory.prototype.doorMonitor = function(targetState, count) {
     }
 };
 
+PiGarageDoorAccessory.prototype.doorWatch = function() {
+    var previousState = null;
+    var watch = function() {
+        //watch the garage door
+        if (this.service) {
+            this.doorStatus(function(err, currentState) {
+                previousState = currentState;
+                if (previousState != currentState) {
+                    this.service.getCharacteristic(Characteristic.CurrentDoorState).setValue(currentState, undefined, 'internal');
+                }
+                setTimeout(function() {
+                    watch();
+                }.bind(this), 1000);
+            }.bind(this));
+        }
+    }.bind(this);
+    watch();
+};
+
 PiGarageDoorAccessory.prototype.doorToggle = function(targetState, callback, context) {
     if (context === 'internal') {
         if (callback) {
@@ -92,6 +111,8 @@ PiGarageDoorAccessory.prototype.getServices = function() {
         .on('get', this.doorStatus.bind(this));
 
     this.service = garageDoorService;
+
+    this.doorWatch();
 
     return [garageDoorService];
 }
